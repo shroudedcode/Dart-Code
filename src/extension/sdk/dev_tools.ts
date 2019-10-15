@@ -17,7 +17,6 @@ import { config } from "../config";
 import { PubGlobal } from "../pub/global";
 import { StdIOService } from "../services/stdio_service";
 import { DartDebugSessionInformation } from "../utils/vscode/debug";
-import { envUtils } from "../utils/vscode/editor";
 
 const devtools = "devtools";
 const devtoolsPackageName = "Dart DevTools";
@@ -71,7 +70,8 @@ export class DevToolsManager implements vs.Disposable {
 				const canLaunchDevToolsThroughService = isRunningLocally
 					&& !process.env.DART_CODE_IS_TEST_RUN
 					&& await waitFor(() => this.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.LaunchDevTools), 500);
-				if (canLaunchDevToolsThroughService) {
+
+				if (false && canLaunchDevToolsThroughService) {
 					try {
 						await session.session.customRequest(
 							"service",
@@ -102,7 +102,21 @@ export class DevToolsManager implements vs.Disposable {
 					.map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(queryParams[key]!)}`)
 					.join("&");
 				const fullUrl = `${url}?${paramsString}&uri=${encodeURIComponent(session.vmServiceUri)}`;
-				await envUtils.openInBrowser(fullUrl);
+
+				// TEMP ///////////
+				const panel = vs.window.createWebviewPanel(
+					"dartDevTools",
+					"Dart DevTools",
+					vs.ViewColumn.One,
+					{
+						enableScripts: true,
+						// localResourceRoots: [vs.Uri.file(path.join(this.extensionPath, "resources/devtools"))],
+						localResourceRoots: [],
+					},
+				);
+				panel.webview.html = `<iframe src="${fullUrl}" width="100%" height="900"></frame>`;
+				// TEMP ///////////
+				// await envUtils.openInBrowser(fullUrl);
 			});
 
 			this.devToolsStatusBarItem.text = "Dart DevTools";
