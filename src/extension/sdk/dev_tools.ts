@@ -107,14 +107,28 @@ export class DevToolsManager implements vs.Disposable {
 				const panel = vs.window.createWebviewPanel(
 					"dartDevTools",
 					"Dart DevTools",
-					vs.ViewColumn.One,
+					vs.ViewColumn.Two,
 					{
 						enableScripts: true,
 						// localResourceRoots: [vs.Uri.file(path.join(this.extensionPath, "resources/devtools"))],
 						localResourceRoots: [],
+						retainContextWhenHidden: true,
 					},
 				);
-				panel.webview.html = `<iframe src="${fullUrl}" width="100%" height="900"></frame>`;
+				// Note: For this to work, DevTools will need a suitable x-frame-options header.
+				// For local testing, this will work:
+				// server.defaultResponseHeaders.remove('x-frame-options', 'SAMEORIGIN');
+				const uri = vs.Uri.parse(url);
+				panel.webview.html = `
+				<html>
+				<head>
+					<meta http-equiv="Content-Security-Policy" content="default-src 'self' http://${uri.authority};">
+				</head>
+				<body>
+					<iframe src="${fullUrl}" width="100%" height="900"></frame>
+				</body>
+				</html>
+				`;
 				// TEMP ///////////
 				// await envUtils.openInBrowser(fullUrl);
 			});
